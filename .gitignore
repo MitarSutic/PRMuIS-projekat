@@ -1,0 +1,25 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+Debug/
+Release/
+x64/
+x86/
+
+# Others
+*.log
+*.vsix
+*.nupkg
+*.cache
+*.db
+
+# OS files
+Thumbs.db
+Desktop.ini
