@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common.Models;
+using System;
 
 namespace Server
 {
@@ -8,8 +9,12 @@ namespace Server
         {
             try
             {
+
+
                 TcpLoginServer login = new TcpLoginServer();
                 var igrac = login.Start();
+                
+
 
                 Console.WriteLine("Igra pocinje...");
 

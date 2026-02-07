@@ -34,7 +34,8 @@ namespace Server
             Array.Copy(buffer, data, bytesRead);
 
             igrac = BinarySerializer.Deserialize<Igrac>(data);
-
+            igrac.BrojZivota = 3;
+            igrac.BrojPoena = 0;
             igrac.X = 20;
             igrac.Y = 19;
 

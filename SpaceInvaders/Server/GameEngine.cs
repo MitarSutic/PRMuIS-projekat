@@ -7,8 +7,10 @@ namespace Server
 {
     class GameEngine
     {
+
         public GameState State { get; private set; }
         private Random rnd = new Random();
+        private int obstacleTick = 0;
 
         public GameEngine(Igrac igrac)
         {
@@ -31,35 +33,52 @@ namespace Server
                     break;
 
                 case InputType.SHOOT:
-                    // kasnije projektil
+                    State.Projektili.Add(new Projektil
+                    {
+                        X = State.Igrac.X,
+                        Y = State.Igrac.Y - 1
+                    });
                     break;
+
             }
         }
 
         public void Update()
         {
-            GeneratePrepreke();
-            MovePrepreke();
+            obstacleTick++;
+
+            // prepreke se generisu i pomeraju sporije
+            if (obstacleTick % 3 == 0)   // promeni 3 → 4 ili 5 ako treba jos sporije
+            {
+                GeneratePrepreke();
+                MovePrepreke();
+            }
+
+            // igrac i projektili se azuriraju svaki tick
             MoveProjektili();
             DetectCollisions();
         }
+
 
         private void GeneratePrepreke()
         {
             for (int x = 0; x < 40; x++)
             {
-                if (rnd.NextDouble() < 0.05)
+                if (rnd.NextDouble() < 0.02)
                 {
+                    char oblik = rnd.NextDouble() < 0.5 ? 'O' : '#';
+
                     State.Prepreke.Add(new Prepreka
                     {
                         X = x,
                         Y = 0,
-                        Oblik = 'O',
+                        Oblik = oblik,
                         Aktivna = Status.Aktivna
                     });
                 }
             }
         }
+
 
         private void MovePrepreke()
         {
@@ -79,10 +98,12 @@ namespace Server
             foreach (var m in State.Projektili.ToList())
             {
                 m.Y--;
+
                 if (m.Y < 0)
                     State.Projektili.Remove(m);
             }
         }
+
 
         private void DetectCollisions()
         {
@@ -99,5 +120,7 @@ namespace Server
                 }
             }
         }
+
+
     }
 }
