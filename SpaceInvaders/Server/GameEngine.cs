@@ -8,68 +8,83 @@ namespace Server
 {
     class GameEngine
     {
-
         public GameState State { get; private set; }
-        private Random rnd = new Random();
-        private int obstacleTick = 0;
         public List<Igrac> Igraci { get; private set; }
 
+        private Random rnd = new Random();
+        private int obstacleTick = 0;
 
-        public GameEngine(Igrac igrac)
+        public GameEngine(List<Igrac> igraci)
         {
-            State = new GameState();
-            State.Igrac = igrac;
+            Igraci = igraci;
 
-            Igraci = new List<Igrac>();
-            Igraci.Add(igrac);
+            State = new GameState();
+            State.Igraci = igraci;
         }
 
-        public void HandleInput(InputCommand cmd)
+        // ===== INPUT PO IGRACU =====
+        public void HandleInput(InputCommand cmd, Igrac igrac)
         {
-            if (cmd == null) return;
+            if (cmd == null || igrac == null)
+                return;
+
+            int oldX = igrac.X;
 
             switch (cmd.Type)
             {
                 case InputType.LEFT:
-                    State.Igrac.X--;
+                    igrac.X--;
                     break;
 
                 case InputType.RIGHT:
-                    State.Igrac.X++;
+                    igrac.X++;
                     break;
 
                 case InputType.SHOOT:
                     State.Projektili.Add(new Projektil
                     {
-                        X = State.Igrac.X,
-                        Y = State.Igrac.Y - 1
+                        X = igrac.X,
+                        Y = igrac.Y - 1,
+                        Posiljaoc = igrac.Id.ToString()
                     });
                     break;
-
             }
-            // Clamp igraca unutar mape 21x40
-            State.Igrac.X = Math.Max(0, Math.Min(39, State.Igrac.X));
-            State.Igrac.Y = Math.Max(0, Math.Min(20, State.Igrac.Y));
+
+            // ===== UDAR U ZID (NEMA EXCEPTIONA) =====
+            igrac.X = Math.Max(0, Math.Min(39, igrac.X));
+            igrac.Y = Math.Max(0, Math.Min(20, igrac.Y));
+
+            // ===== SPRECAVANJE PREKLAPANJA =====
+            foreach (var other in Igraci)
+            {
+                if (other != igrac && other.X == igrac.X && other.Y == igrac.Y)
+                {
+                    if (igrac.X > oldX)
+                        igrac.X = Math.Min(39, oldX + 2); // desno 2
+                    else
+                        igrac.X = Math.Max(0, oldX - 2);  // levo 2
+                }
+            }
 
         }
 
+        // ===== UPDATE IGRE =====
         public void Update()
         {
             obstacleTick++;
 
-            // prepreke se generisu i pomeraju sporije
-            if (obstacleTick % 3 == 0)   // promeni 3 → 4 ili 5 ako treba jos sporije
+            // prepreke se pomeraju sporije
+            if (obstacleTick % 3 == 0)
             {
                 GeneratePrepreke();
                 MovePrepreke();
             }
 
-            // igrac i projektili se azuriraju svaki tick
             MoveProjektili();
             DetectCollisions();
         }
 
-
+        // ===== PREPREKE =====
         private void GeneratePrepreke()
         {
             for (int x = 0; x < 40; x++)
@@ -89,22 +104,27 @@ namespace Server
             }
         }
 
-
         private void MovePrepreke()
         {
             foreach (var p in State.Prepreke.ToList())
             {
                 p.Y++;
+
                 if (p.Y >= 20)
                 {
                     State.Prepreke.Remove(p);
-                    if (State.Igrac.BrojZivota > 0)
-                        State.Igrac.BrojZivota--;
 
+                    // svaki igrac gubi zivot
+                    foreach (var igrac in Igraci)
+                    {
+                        if (igrac.BrojZivota > 0)
+                            igrac.BrojZivota--;
+                    }
                 }
             }
         }
 
+        // ===== PROJEKTILI =====
         private void MoveProjektili()
         {
             foreach (var m in State.Projektili.ToList())
@@ -116,7 +136,7 @@ namespace Server
             }
         }
 
-
+        // ===== SUDARI =====
         private void DetectCollisions()
         {
             foreach (var m in State.Projektili.ToList())
@@ -128,11 +148,15 @@ namespace Server
                 {
                     State.Prepreke.Remove(hit);
                     State.Projektili.Remove(m);
-                    State.Igrac.BrojPoena++;
+
+                    // poeni idu igracu koji je pucao
+                    var shooter = Igraci
+                        .FirstOrDefault(i => i.Id.ToString() == m.Posiljaoc);
+
+                    if (shooter != null)
+                        shooter.BrojPoena++;
                 }
             }
         }
-
-
     }
 }

@@ -16,6 +16,7 @@ namespace Client
             Console.Title = "PRMuIS Client";
             Console.CursorVisible = true;
 
+            // ===== PRIJAVA =====
             Console.WriteLine("=== PRIJAVA IGRACA ===");
             Console.Write("Unesi ime: ");
             string ime = Console.ReadLine();
@@ -23,26 +24,53 @@ namespace Client
             Console.Write("Unesi prezime: ");
             string prezime = Console.ReadLine();
 
-            // === TCP LOGIN ===
+            int mode;
+            Console.WriteLine("\nIzaberi mod igre:");
+            Console.WriteLine("1 - Jedan igrac");
+            Console.WriteLine("2 - Dva igraca");
+            while (!int.TryParse(Console.ReadLine(), out mode) || (mode != 1 && mode != 2))
+            {
+                Console.WriteLine("Unesi 1 ili 2:");
+            }
+
             Igrac igrac = new Igrac
             {
                 Ime = ime,
                 Prezime = prezime
             };
 
+            // ===== TCP LOGIN =====
             try
             {
                 TcpClient tcp = new TcpClient("127.0.0.1", 5000);
                 NetworkStream stream = tcp.GetStream();
 
+                // salje igraca
                 byte[] data = BinarySerializer.Serialize(igrac);
                 stream.Write(data, 0, data.Length);
 
+                // salje mod (1 ili 2)
+                stream.WriteByte((byte)mode);
+
+                // ceka odgovor servera
                 byte[] buffer = new byte[1024];
                 int bytesRead = stream.Read(buffer, 0, buffer.Length);
                 string response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
 
-                Console.WriteLine("Server: " + response);
+                if (response == "CEKANJE")
+                {
+                    Console.WriteLine("Ceka se drugi igrac...");
+                    bytesRead = stream.Read(buffer, 0, buffer.Length);
+                    response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                }
+
+                if (response != "START")
+                {
+                    Console.WriteLine("Neocekivan odgovor servera: " + response);
+                    Console.ReadLine();
+                    return;
+                }
+
                 tcp.Close();
             }
             catch (Exception ex)
@@ -52,10 +80,12 @@ namespace Client
                 return;
             }
 
-            // === UDP DEO IGRE ===
+            // ===== UDP DEO IGRE =====
             Console.Clear();
             Console.CursorVisible = false;
-            Console.WriteLine("Client pokrenut...");
+            Console.WriteLine("Povezan sa serverom. Igra pocinje...");
+            Thread.Sleep(500);
+            Console.Clear();
 
             UdpClient udp = new UdpClient();
             udp.Client.ReceiveTimeout = 100;
@@ -67,9 +97,7 @@ namespace Client
 
             Renderer renderer = new Renderer();
 
-            Console.WriteLine("Povezan sa serverom. Igra pocinje...");
-            Thread.Sleep(500);
-
+            // ===== GAME LOOP =====
             while (true)
             {
                 var start = DateTime.Now;
@@ -98,11 +126,9 @@ namespace Client
                 case ConsoleKey.LeftArrow:
                     cmd = new InputCommand(InputType.LEFT);
                     break;
-
                 case ConsoleKey.RightArrow:
                     cmd = new InputCommand(InputType.RIGHT);
                     break;
-
                 case ConsoleKey.Spacebar:
                     cmd = new InputCommand(InputType.SHOOT);
                     break;
@@ -151,7 +177,6 @@ namespace Client
                     Console.ReadLine();
                     Environment.Exit(0);
                 }
-
             }
             catch (SocketException)
             {

@@ -11,12 +11,15 @@ namespace Common.Models
     {
         public Igrac Igrac { get; set; }
         public List<Prepreka> Prepreke { get; set; }
+
+        public List<Igrac> Igraci { get; set; }
         public List<Projektil> Projektili { get; set; }
         public Status Status { get; set; }
         public List<Igrac> RangLista { get; set; }
 
         public GameState()
         {
+            Igraci = new List<Igrac>();
             Prepreke = new List<Prepreka>();
             Projektili = new List<Projektil>();
             RangLista = new List<Igrac>();

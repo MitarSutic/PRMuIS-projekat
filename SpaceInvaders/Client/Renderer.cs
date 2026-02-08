@@ -7,13 +7,23 @@ namespace Client
     {
         public void Draw(GameState state)
         {
-            // Status bar
+            if (state == null || state.Igraci == null || state.Igraci.Count == 0)
+                return;
+
             Console.SetCursorPosition(0, 0);
-            Console.WriteLine($"Poeni: {state.Igrac.BrojPoena}".PadRight(Console.WindowWidth));
-            Console.WriteLine($"Zivoti: {state.Igrac.BrojZivota}".PadRight(Console.WindowWidth));
+
+            // === STATUS BAR ZA SVE IGRACE ===
+            foreach (var igrac in state.Igraci)
+            {
+                Console.WriteLine(
+                    $"{igrac.Ime}: Poeni {igrac.BrojPoena} | Zivoti {igrac.BrojZivota}"
+                        .PadRight(Console.WindowWidth)
+                );
+            }
+
             Console.WriteLine("".PadRight(Console.WindowWidth));
 
-            // Logicka mapa 21x40 (vizuelno 2 karaktera po polju)
+            // === MAPA 21x40 (2 karaktera po polju) ===
             string[,] mapa = new string[21, 40];
 
             // Prepreke
@@ -31,26 +41,37 @@ namespace Client
                 mapa[m.Y, m.X] = " ^";
             }
 
-            // Igrac
-            mapa[state.Igrac.Y, state.Igrac.X] = " A";
+            // Igraci
+            int playerIndex = 1;
 
-            // Gornja ivica (border)
+            foreach (var igrac in state.Igraci)
+            {
+                // prvi red – igrac
+                mapa[igrac.Y, igrac.X] = " A";
+
+                // drugi red – broj igraca
+                if (igrac.Y + 1 < 21)
+                    mapa[igrac.Y + 1, igrac.X] = " " + playerIndex;
+
+                playerIndex++;
+            }
+
+
+            // Gornji border
             Console.WriteLine("+" + new string('-', 40 * 2) + "+");
 
-            // Crtanje mape sa bocnim ivicama
+            // Crtanje mape
             for (int y = 0; y < 21; y++)
             {
                 Console.Write("|");
-
                 for (int x = 0; x < 40; x++)
                 {
                     Console.Write(mapa[y, x] ?? "  ");
                 }
-
                 Console.WriteLine("|");
             }
 
-            // Donja ivica (border)
+            // Donji border
             Console.WriteLine("+" + new string('-', 40 * 2) + "+");
         }
     }

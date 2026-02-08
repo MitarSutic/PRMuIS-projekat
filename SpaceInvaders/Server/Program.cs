@@ -1,5 +1,6 @@
-﻿using Common.Models;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using Common.Models;
 
 namespace Server
 {
@@ -9,16 +10,14 @@ namespace Server
         {
             try
             {
-
-
+                // === TCP LOGIN (1 ili 2 igraca) ===
                 TcpLoginServer login = new TcpLoginServer();
-                var igrac = login.Start();
-                
-
+                List<Igrac> igraci = login.Start();
 
                 Console.WriteLine("Igra pocinje...");
 
-                GameServer server = new GameServer(igrac);
+                // === GAME SERVER (UDP + GAME LOOP) ===
+                GameServer server = new GameServer(igraci);
 
                 System.Threading.Thread gameThread =
                     new System.Threading.Thread(server.Run);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -10,46 +11,77 @@ namespace Server
     class TcpLoginServer
     {
         private TcpListener listener;
-        private Igrac igrac;
+        private List<Igrac> igraci = new List<Igrac>();
+        private List<NetworkStream> streams = new List<NetworkStream>();
+        private int maxPlayers = 1;
 
         public TcpLoginServer()
         {
             listener = new TcpListener(IPAddress.Any, 5000);
         }
 
-        public Igrac Start()
+        // Vraca listu igraca (1 ili 2)
+        public List<Igrac> Start()
         {
             listener.Start();
-            Console.WriteLine("TCP Login server pokrenut (1 igrac)...");
+            Console.WriteLine("TCP Login server pokrenut...");
 
-            TcpClient client = listener.AcceptTcpClient();
-            Console.WriteLine("Klijent povezan.");
+            while (igraci.Count < maxPlayers)
+            {
+                TcpClient client = listener.AcceptTcpClient();
+                Console.WriteLine("Klijent povezan.");
 
-            NetworkStream stream = client.GetStream();
+                NetworkStream stream = client.GetStream();
+                streams.Add(stream);
 
-            byte[] buffer = new byte[2048];
-            int bytesRead = stream.Read(buffer, 0, buffer.Length);
+                // ===== PRIMANJE IGRACA =====
+                byte[] buffer = new byte[2048];
+                int bytesRead = stream.Read(buffer, 0, buffer.Length);
 
-            byte[] data = new byte[bytesRead];
-            Array.Copy(buffer, data, bytesRead);
+                byte[] data = new byte[bytesRead];
+                Array.Copy(buffer, data, bytesRead);
 
-            igrac = BinarySerializer.Deserialize<Igrac>(data);
-            igrac.BrojZivota = 3;
-            igrac.BrojPoena = 0;
-            igrac.X = 20;
-            igrac.Y = 19;
+                Igrac igrac = BinarySerializer.Deserialize<Igrac>(data);
 
-            Console.WriteLine("Prijavljen igrac: " +
-                igrac.Ime + " " + igrac.Prezime);
+                // ===== PRIMANJE MODA (SAMO PRVI IGRAC) =====
+                if (igraci.Count == 0)
+                {
+                    int mode = stream.ReadByte(); // 1 ili 2
+                    maxPlayers = (mode == 2) ? 2 : 1;
+                    Console.WriteLine($"Izabran mod: {maxPlayers} igrac(a)");
+                }
 
-            string odgovor = "USPESNA_PRIJAVA";
-            byte[] response = Encoding.UTF8.GetBytes(odgovor);
-            stream.Write(response, 0, response.Length);
+                // ===== INICIJALIZACIJA IGRACA =====
+                igrac.BrojZivota = 3;
+                igrac.BrojPoena = 0;
+                igrac.Y = 19;
+                igrac.X = (igraci.Count == 0) ? 10 : 30;
 
-            client.Close();
+                igraci.Add(igrac);
+                Console.WriteLine($"Prijavljen igrac: {igrac.Ime} {igrac.Prezime}");
+
+                // ===== AKO CEKA DRUGOG IGRACA =====
+                if (igraci.Count < maxPlayers)
+                {
+                    byte[] waitMsg = Encoding.UTF8.GetBytes("CEKANJE");
+                    stream.Write(waitMsg, 0, waitMsg.Length);
+                    // konekcija ostaje otvorena
+                }
+            }
+
+            // ===== SVI IGRACI SU TU → SALJEMO START SVIMA =====
+            byte[] startMsg = Encoding.UTF8.GetBytes("START");
+
+            foreach (var stream in streams)
+            {
+                stream.Write(startMsg, 0, startMsg.Length);
+                stream.Close();
+            }
+
             listener.Stop();
+            Console.WriteLine("Svi igraci prijavljeni. Igra pocinje.");
 
-            return igrac;
+            return igraci;
         }
     }
 }
