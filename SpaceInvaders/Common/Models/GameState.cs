@@ -13,11 +13,13 @@ namespace Common.Models
         public List<Prepreka> Prepreke { get; set; }
         public List<Projektil> Projektili { get; set; }
         public Status Status { get; set; }
+        public List<Igrac> RangLista { get; set; }
 
         public GameState()
         {
             Prepreke = new List<Prepreka>();
             Projektili = new List<Projektil>();
-            }
+            RangLista = new List<Igrac>();
+        }
         }
     }

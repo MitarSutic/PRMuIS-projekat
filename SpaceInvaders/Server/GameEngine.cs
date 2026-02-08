@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Common.Models;
 using Common.Net;
@@ -11,11 +12,16 @@ namespace Server
         public GameState State { get; private set; }
         private Random rnd = new Random();
         private int obstacleTick = 0;
+        public List<Igrac> Igraci { get; private set; }
+
 
         public GameEngine(Igrac igrac)
         {
             State = new GameState();
             State.Igrac = igrac;
+
+            Igraci = new List<Igrac>();
+            Igraci.Add(igrac);
         }
 
         public void HandleInput(InputCommand cmd)
@@ -41,6 +47,10 @@ namespace Server
                     break;
 
             }
+            // Clamp igraca unutar mape 21x40
+            State.Igrac.X = Math.Max(0, Math.Min(39, State.Igrac.X));
+            State.Igrac.Y = Math.Max(0, Math.Min(20, State.Igrac.Y));
+
         }
 
         public void Update()
@@ -88,7 +98,9 @@ namespace Server
                 if (p.Y >= 20)
                 {
                     State.Prepreke.Remove(p);
-                    State.Igrac.BrojZivota--;
+                    if (State.Igrac.BrojZivota > 0)
+                        State.Igrac.BrojZivota--;
+
                 }
             }
         }

@@ -13,7 +13,7 @@ namespace Client
             Console.WriteLine($"Zivoti: {state.Igrac.BrojZivota}".PadRight(Console.WindowWidth));
             Console.WriteLine("".PadRight(Console.WindowWidth));
 
-            // Logicka mapa 21x40, vizuelno 21x80 (2 karaktera po polju)
+            // Logicka mapa 21x40 (vizuelno 2 karaktera po polju)
             string[,] mapa = new string[21, 40];
 
             // Prepreke
@@ -34,15 +34,24 @@ namespace Client
             // Igrac
             mapa[state.Igrac.Y, state.Igrac.X] = " A";
 
-            // Crtanje mape
+            // Gornja ivica (border)
+            Console.WriteLine("+" + new string('-', 40 * 2) + "+");
+
+            // Crtanje mape sa bocnim ivicama
             for (int y = 0; y < 21; y++)
             {
+                Console.Write("|");
+
                 for (int x = 0; x < 40; x++)
                 {
                     Console.Write(mapa[y, x] ?? "  ");
                 }
-                Console.WriteLine();
+
+                Console.WriteLine("|");
             }
+
+            // Donja ivica (border)
+            Console.WriteLine("+" + new string('-', 40 * 2) + "+");
         }
     }
 }

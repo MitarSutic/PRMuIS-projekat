@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -61,6 +62,9 @@ namespace Server
 
                 // === GAME OVER ===
                 engine.State.Status = Status.GAME_OVER;
+                engine.State.RangLista = engine.Igraci.OrderByDescending(i => i.BrojPoena) .ThenByDescending(i => i.BrojZivota)
+    .ToList();
+
                 SendState();
                 Console.WriteLine("GAME OVER");
             }

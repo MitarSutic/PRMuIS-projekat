@@ -132,12 +132,26 @@ namespace Client
 
                 if (state.Status == Status.GAME_OVER)
                 {
-                    Console.WriteLine();
-                    Console.WriteLine("GAME OVER!");
-                    Console.WriteLine("Poeni: " + state.Igrac.BrojPoena);
+                    Console.Clear();
+                    Console.WriteLine("===== GAME OVER =====\n");
+                    Console.WriteLine("RANG LISTA:");
+                    Console.WriteLine("----------------------------");
+
+                    int rank = 1;
+                    foreach (var i in state.RangLista)
+                    {
+                        Console.WriteLine(
+                            $"{rank}. {i.Ime} {i.Prezime} | Poeni: {i.BrojPoena} | Zivoti: {i.BrojZivota}"
+                        );
+                        rank++;
+                    }
+
+                    Console.WriteLine("----------------------------");
+                    Console.WriteLine("Pritisni ENTER za izlaz...");
                     Console.ReadLine();
                     Environment.Exit(0);
                 }
+
             }
             catch (SocketException)
             {
